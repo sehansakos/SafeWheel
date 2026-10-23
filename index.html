@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="en"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwMzkxMDUwMjMyMDM5Njg3NTkxNyIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2Y4MWM4YjY4ZDc2OGU1YzNfaW5kZXguaHRtbC04NTIifSwiZXhwIjoxNzkyNjkyNzQ2LCJpYXQiOjE3OTI2ODkxNDYsImFsZyI6IlJTMjU2In0.kJ0qaGq2SJyrSNA4hb0KVQpXJFtfEKu2PLdCC2T8EPMugaHyGr79yTAYVnN2VNF8KSqWO2P3zB2lzH5Y8Q6X4aoU2f00c_t8TWZDctU3JoJl0CZiiGSVcOpDnjy5N-czlFlFsf8yobgbXydnN1UduqO2wx6zuhGioCD49Ob-e34Y1fN3dezl79zZO8ZuL-1s_wIaPmJa5GCQPNuy7Wh1BkRtSMujWM1UoLxmNhZNku8wR0ngxBqbwnNrnll7QfPTK9uR8N3QFTXyzVrJE6ct1GZ1TveazfPjOKw5VRBx-Yc7kubqNpTsylO8a2mhX5bxGbrMHDubNLpDj4HLj0dP-Q","c_f81c8b68d768e5c3_index.html-852")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RescueWrench — Dual App Interactive Platform &amp; Deployer</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
+  <!-- Leaflet Maps CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <!-- JSZip and FileSaver for One-Click Full Project ZIP Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" crossorigin="anonymous"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            },
+            cust: {
+              primary: '#0284c7',
+              dark: '#0369a1',
+              accent: '#38bdf8'
+            },
+            mech: {
+              primary: '#16a34a',
+              dark: '#15803d',
+              accent: '#4ade80'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Sleek Mobile Frame Styling */
+    .phone-shell {
+      border: 10px solid #1e293b;
+      border-radius: 42px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      position: relative;
+      background: #0f172a;
+      overflow: hidden;
+      width: 100%;
+      max-width: 410px;
+      height: 790px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .dynamic-island {
+      width: 110px;
+      height: 22px;
+      background-color: #000;
+      border-radius: 14px;
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Custom Leaflet Map Pin Overrides */
+    .leaflet-popup-content-wrapper {
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      font-size: 11px;
+    }
+    .leaflet-popup-tip {
+      background: #0f172a;
+    }
+    .custom-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.inset-x-2{left:0.5rem;right:0.5rem}.bottom-5{bottom:1.25rem}.left-2{left:0.5rem}.right-5{right:1.25rem}.top-0{top:0px}.top-2{top:0.5rem}.z-0{z-index:0}.z-10{z-index:10}.z-20{z-index:20}.z-50{z-index:50}.z-\[400\]{z-index:400}.mx-auto{margin-left:auto;margin-right:auto}.my-1{margin-top:0.25rem;margin-bottom:0.25rem}.mb-1{margin-bottom:0.25rem}.mb-1\.5{margin-bottom:0.375rem}.mb-2{margin-bottom:0.5rem}.ml-1{margin-left:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-1{height:0.25rem}.h-12{height:3rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-20{height:5rem}.h-3{height:0.75rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-56{height:14rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-8{height:2rem}.h-9{height:2.25rem}.h-full{height:100%}.max-h-\[85vh\]{max-height:85vh}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-16{width:4rem}.w-2{width:0.5rem}.w-2\.5{width:0.625rem}.w-20{width:5rem}.w-28{width:7rem}.w-3{width:0.75rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-7{width:1.75rem}.w-8{width:2rem}.w-9{width:2.25rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-7xl{max-width:80rem}.max-w-\[240px\]{max-width:240px}.max-w-\[410px\]{max-width:410px}.max-w-md{max-width:28rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.translate-x-5{--tw-translate-x:1.25rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-20{--tw-translate-y:5rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes bounce{0%, 100%{transform:translateY(-25%);animation-timing-function:cubic-bezier(0.8,0,1,1)}50%{transform:none;animation-timing-function:cubic-bezier(0,0,0.2,1)}}.animate-bounce{animation:bounce 1s infinite}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}@keyframes spin{to{transform:rotate(360deg)}}.animate-spin{animation:spin 1s linear infinite}.cursor-crosshair{cursor:crosshair}.cursor-not-allowed{cursor:not-allowed}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-around{justify-content:space-around}.justify-items-center{justify-items:center}.gap-0\.5{gap:0.125rem}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-8{gap:2rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-amber-500{--tw-border-opacity:1;border-color:rgb(245 158 11 / var(--tw-border-opacity, 1))}.border-amber-500\/50{border-color:rgb(245 158 11 / 0.5)}.border-cust-primary{--tw-border-opacity:1;border-color:rgb(2 132 199 / var(--tw-border-opacity, 1))}.border-emerald-500{--tw-border-opacity:1;border-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.border-emerald-500\/20{border-color:rgb(16 185 129 / 0.2)}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-emerald-500\/50{border-color:rgb(16 185 129 / 0.5)}.border-emerald-600\/70{border-color:rgb(5 150 105 / 0.7)}.border-sky-400{--tw-border-opacity:1;border-color:rgb(56 189 248 / var(--tw-border-opacity, 1))}.border-sky-500{--tw-border-opacity:1;border-color:rgb(14 165 233 / var(--tw-border-opacity, 1))}.border-sky-500\/30{border-color:rgb(14 165 233 / 0.3)}.border-sky-500\/40{border-color:rgb(14 165 233 / 0.4)}.border-sky-700\/80{border-color:rgb(3 105 161 / 0.8)}.border-slate-600{--tw-border-opacity:1;border-color:rgb(71 85 105 / var(--tw-border-opacity, 1))}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-slate-700\/50{border-color:rgb(51 65 85 / 0.5)}.border-slate-700\/60{border-color:rgb(51 65 85 / 0.6)}.border-slate-700\/80{border-color:rgb(51 65 85 / 0.8)}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-slate-800\/80{border-color:rgb(30 41 59 / 0.8)}.bg-slate-950{--tw-bg-opacity:1;background-color:rgb(2 6 23 / var(--tw-bg-opacity, 1))}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-amber-600{--tw-bg-opacity:1;background-color:rgb(217 119 6 / var(--tw-bg-opacity, 1))}.bg-amber-950\/90{background-color:rgb(69 26 3 / 0.9)}.bg-brand-600{--tw-bg-opacity:1;background-color:rgb(234 88 12 / var(--tw-bg-opacity, 1))}.bg-cust-primary{--tw-bg-opacity:1;background-color:rgb(2 132 199 / var(--tw-bg-opacity, 1))}.bg-cust-primary\/10{background-color:rgb(2 132 199 / 0.1)}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-emerald-950\/60{background-color:rgb(2 44 34 / 0.6)}.bg-mech-primary{--tw-bg-opacity:1;background-color:rgb(22 163 74 / var(--tw-bg-opacity, 1))}.bg-rose-500\/20{background-color:rgb(244 63 94 / 0.2)}.bg-sky-500\/20{background-color:rgb(14 165 233 / 0.2)}.bg-sky-600{--tw-bg-opacity:1;background-color:rgb(2 132 199 / var(--tw-bg-opacity, 1))}.bg-sky-600\/20{background-color:rgb(2 132 199 / 0.2)}.bg-sky-600\/30{background-color:rgb(2 132 199 / 0.3)}.bg-sky-950\/70{background-color:rgb(8 47 73 / 0.7)}.bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-800\/40{background-color:rgb(30 41 59 / 0.4)}.bg-slate-800\/60{background-color:rgb(30 41 59 / 0.6)}.bg-slate-800\/80{background-color:rgb(30 41 59 / 0.8)}.bg-slate-800\/95{background-color:rgb(30 41 59 / 0.95)}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-900\/90{background-color:rgb(15 23 42 / 0.9)}.bg-slate-900\/95{background-color:rgb(15 23 42 / 0.95)}.bg-slate-950\/70{background-color:rgb(2 6 23 / 0.7)}.bg-slate-950\/80{background-color:rgb(2 6 23 / 0.8)}.bg-slate-950\/85{background-color:rgb(2 6 23 / 0.85)}.bg-transparent{background-color:transparent}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--tw-gradient-stops))}.from-brand-600{--tw-gradient-from:#ea580c var(--tw-gradient-from-position);--tw-gradient-to:rgb(234 88 12 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-emerald-950\/40{--tw-gradient-from:rgb(2 44 34 / 0.4) var(--tw-gradient-from-position);--tw-gradient-to:rgb(2 44 34 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-amber-500{--tw-gradient-to:rgb(245 158 11 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #f59e0b var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-orange-500{--tw-gradient-to:rgb(249 115 22 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #f97316 var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-slate-800\/80{--tw-gradient-to:rgb(30 41 59 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), rgb(30 41 59 / 0.8) var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-amber-500{--tw-gradient-to:#f59e0b var(--tw-gradient-to-position)}.to-slate-900{--tw-gradient-to:#0f172a var(--tw-gradient-to-position)}.to-yellow-400{--tw-gradient-to:#facc15 var(--tw-gradient-to-position)}.fill-current{fill:currentColor}.p-0\.5{padding:0.125rem}.p-1{padding:0.25rem}.p-1\.5{padding:0.375rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.pb-1{padding-bottom:0.25rem}.pb-2{padding-bottom:0.5rem}.pb-2\.5{padding-bottom:0.625rem}.pl-5{padding-left:1.25rem}.pt-1{padding-top:0.25rem}.pt-1\.5{padding-top:0.375rem}.pt-2{padding-top:0.5rem}.pt-2\.5{padding-top:0.625rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-sans{font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-\[9px\]{font-size:9px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-slate-100{--tw-text-opacity:1;color:rgb(241 245 249 / var(--tw-text-opacity, 1))}.text-amber-200{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-blue-400{--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.text-brand-600{--tw-text-opacity:1;color:rgb(234 88 12 / var(--tw-text-opacity, 1))}.text-cust-accent{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-mech-accent{--tw-text-opacity:1;color:rgb(74 222 128 / var(--tw-text-opacity, 1))}.text-pink-400{--tw-text-opacity:1;color:rgb(244 114 182 / var(--tw-text-opacity, 1))}.text-purple-400{--tw-text-opacity:1;color:rgb(192 132 252 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.text-rose-400{--tw-text-opacity:1;color:rgb(251 113 133 / var(--tw-text-opacity, 1))}.text-sky-300{--tw-text-opacity:1;color:rgb(125 211 252 / var(--tw-text-opacity, 1))}.text-sky-400{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-teal-400{--tw-text-opacity:1;color:rgb(45 212 191 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-400{--tw-text-opacity:1;color:rgb(250 204 21 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.opacity-0{opacity:0}.opacity-50{opacity:0.5}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-emerald-600\/30{--tw-shadow-color:rgb(5 150 105 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-orange-500\/20{--tw-shadow-color:rgb(249 115 22 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-orange-600\/30{--tw-shadow-color:rgb(234 88 12 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.selection\:bg-brand-500 *::selection{--tw-bg-opacity:1;background-color:rgb(249 115 22 / var(--tw-bg-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-brand-500::selection{--tw-bg-opacity:1;background-color:rgb(249 115 22 / var(--tw-bg-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:scale-125:hover{--tw-scale-x:1.25;--tw-scale-y:1.25;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:border-red-600\/50:hover{border-color:rgb(220 38 38 / 0.5)}.hover\:bg-amber-500:hover{--tw-bg-opacity:1;background-color:rgb(245 158 11 / var(--tw-bg-opacity, 1))}.hover\:bg-brand-500:hover{--tw-bg-opacity:1;background-color:rgb(249 115 22 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-500:hover{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-600:hover{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.hover\:bg-red-950\/50:hover{background-color:rgb(69 10 10 / 0.5)}.hover\:bg-sky-500:hover{--tw-bg-opacity:1;background-color:rgb(14 165 233 / var(--tw-bg-opacity, 1))}.hover\:bg-sky-600\/30:hover{background-color:rgb(2 132 199 / 0.3)}.hover\:bg-slate-600:hover{--tw-bg-opacity:1;background-color:rgb(71 85 105 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.hover\:text-red-400:hover{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.hover\:text-slate-300:hover{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:brightness-110:hover{--tw-brightness:brightness(1.1);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-0:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:block{display:block}.sm\:p-6{padding:1.5rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}}@media (min-width: 768px){.md\:inline{display:inline}}@media (min-width: 1024px){.lg\:hidden{display:none}.lg\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.lg\:gap-12{gap:3rem}}</style></head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+  <!-- ================= TOP GLOBAL DASHBOARD HEADER ================= -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50 px-4 py-2.5 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Status -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wrench" aria-hidden="true" class="lucide lucide-wrench w-5 h-5 text-white"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"></path></svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base text-white tracking-tight">RescueWrench</h1>
+            <span class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">Reactive Dual-Sync</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Uber/PickMe for Technical Roadside Assistance &amp; Concierge</p>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex items-center flex-wrap gap-2">
+        <!-- Responsive Mobile Device View Switcher -->
+        <div class="flex bg-slate-800 p-0.5 rounded-xl border border-slate-700 lg:hidden text-xs">
+          <button id="tab-cust" onclick="switchMobileView('cust')" class="px-2.5 py-1 rounded-lg bg-cust-primary text-white font-medium">Customer</button>
+          <button id="tab-mech" onclick="switchMobileView('mech')" class="px-2.5 py-1 rounded-lg text-slate-400 font-medium">Mechanic</button>
+        </div>
+
+        <button id="btn-walkthrough" onclick="startAutoWalkthrough()" class="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition shadow-sm active:scale-95">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play" aria-hidden="true" class="lucide lucide-play w-3.5 h-3.5 fill-current"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
+          <span>Auto-Play Flow</span>
+        </button>
+
+        <button onclick="resetPrototype()" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl font-medium border border-slate-700 transition active:scale-95">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="rotate-ccw" aria-hidden="true" class="lucide lucide-rotate-ccw w-3.5 h-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          <span>Reset</span>
+        </button>
+
+        <!-- DOWNLOAD FULL PROJECT ZIP BUTTON -->
+        <button onclick="generateProjectZip()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-md shadow-emerald-600/30 transition active:scale-95">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download" aria-hidden="true" class="lucide lucide-download w-3.5 h-3.5"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+          <span>Export Full Project ZIP</span>
+        </button>
+
+        <!-- Deployment Architecture Modal -->
+        <button onclick="toggleDeployModal(true)" class="flex items-center gap-1.5 bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-sky-300 text-xs px-3 py-1.5 rounded-xl font-medium transition">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="server" aria-hidden="true" class="lucide lucide-server w-3.5 h-3.5"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg>
+          <span class="hidden md:inline">Cloud Architecture</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= DUAL MOBILES VIEWPORT ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col items-center justify-center">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full justify-items-center items-start">
+
+      <!-- ============================================================== -->
+      <!-- PHONE 1: CUSTOMER / VEHICLE OWNER APP                         -->
+      <!-- ============================================================== -->
+      <div id="container-cust" class="flex flex-col items-center w-full transition-all">
+        <div class="flex items-center justify-between w-full max-w-[410px] mb-2 px-2 text-xs">
+          <span class="font-bold text-sky-400 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="smartphone" aria-hidden="true" class="lucide lucide-smartphone w-3.5 h-3.5"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect><path d="M12 18h.01"></path></svg> Driver Client App
+          </span>
+          <span class="text-slate-400 text-[11px] font-mono" id="cust-gps-badge">GPS Accuracy: ±2.5m</span>
+        </div>
+
+        <div class="phone-shell border-slate-800 bg-slate-900 text-slate-100 flex flex-col">
+          <!-- Dynamic Island -->
+          <div class="dynamic-island">
+            <div class="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          </div>
+
+          <!-- Top Status Bar -->
+          <div class="px-6 pt-2.5 pb-1 flex justify-between items-center text-[10px] text-slate-400 font-medium z-10">
+            <span id="cust-clock">11:24 AM</span>
+            <div class="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" aria-hidden="true" class="lucide lucide-wifi w-3 h-3 text-slate-300"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>
+              <span class="font-mono text-[9px] text-emerald-400">5G</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="battery-charging" aria-hidden="true" class="lucide lucide-battery-charging w-3.5 h-3.5 text-emerald-400"><path d="m11 7-3 5h4l-3 5"></path><path d="M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935"></path><path d="M22 14v-4"></path><path d="M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936"></path></svg>
+            </div>
+          </div>
+
+          <!-- Customer Screen Body -->
+          <div class="flex-1 flex flex-col overflow-y-auto no-scrollbar relative" id="cust-screen">
+
+            <!-- App Bar with Vehicle Garage Dropdown -->
+            <div class="px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 sticky top-0 z-20">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-cust-primary flex items-center justify-center font-bold text-xs text-white">RW</div>
+                <div>
+                  <div class="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Active Vehicle Garage</div>
+                  <select id="vehicle-picker" onchange="updateVehicleSpecs()" class="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer">
+                    <option value="sedan" class="bg-slate-900">Toyota Aqua (Hybrid) • WP-CAG-8921</option>
+                    <option value="suv" class="bg-slate-900">Toyota Land Cruiser (AWD) • WP-CBE-1090</option>
+                    <option value="ev" class="bg-slate-900">Tesla Model 3 (EV) • WP-EV-4421</option>
+                    <option value="bike" class="bg-slate-900">Yamaha FZ-S 150cc • WP-BIKE-901</option>
+                  </select>
+                </div>
+              </div>
+              <button onclick="toggleDiagnosticsModal(true)" title="Deep OBD-II Telematics &amp; Acoustic Diagnostics" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 flex items-center gap-1 text-[11px] font-medium transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cpu" aria-hidden="true" class="lucide lucide-cpu w-3.5 h-3.5"><path d="M12 20v2"></path><path d="M12 2v2"></path><path d="M17 20v2"></path><path d="M17 2v2"></path><path d="M2 12h2"></path><path d="M2 17h2"></path><path d="M2 7h2"></path><path d="M20 12h2"></path><path d="M20 17h2"></path><path d="M20 7h2"></path><path d="M7 20v2"></path><path d="M7 2v2"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="8" y="8" width="8" height="8" rx="1"></rect></svg>
+                <span class="text-[9px] font-bold">OBD-II</span>
+              </button>
+            </div>
+
+            <!-- Vehicle Telemetry Quick Pill Bar -->
+            <div class="px-3 py-1.5 bg-slate-950/70 border-b border-slate-800/80 flex justify-between text-[10px] text-slate-400">
+              <span id="cust-tire-spec">Tires: 185/65 R15 (Good)</span>
+              <span id="cust-batt-spec" class="text-emerald-400">12V Battery: 12.6V (Healthy)</span>
+              <span id="cust-drive-spec">2WD / FWD</span>
+            </div>
+
+            <!-- INTERACTIVE LEAFLET GPS MAP (CUSTOMER) -->
+            <div class="relative w-full h-56 bg-slate-950 border-b border-slate-800 select-none">
+              <div id="cust-map" class="w-full h-full z-0 leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(0px, 0px, 0px) scale(1);"><img alt="" src="https://c.basemaps.cartocdn.com/rastertiles/voyager/14/11826/7877@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(121px, -55px, 0px); opacity: 1;"><img alt="" src="https://b.basemaps.cartocdn.com/rastertiles/voyager/14/11825/7877@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-135px, -55px, 0px); opacity: 1;"><img alt="" src="https://a.basemaps.cartocdn.com/rastertiles/voyager/14/11827/7877@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(377px, -55px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon custom-marker leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(195px, 87px, 0px); z-index: 87;"><div style="background:#ef4444; width:28px; height:28px; border-radius:50%; border:2px solid #fff; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold;">🚗</div></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(3.02753e+06px, 2.01665e+06px, 0px) scale(8192);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"></div></div></div>
+              
+              <!-- Map Overlay Tag -->
+              <div class="absolute top-2 left-2 z-[400] bg-slate-900/90 backdrop-blur border border-slate-700 px-2 py-0.5 rounded text-[10px] text-slate-300 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" class="lucide lucide-map-pin w-3 h-3 text-red-500"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span id="cust-map-status">Breakdown: Galle Rd, Mile 4</span>
+              </div>
+            </div>
+
+            <!-- STATE 1: IDLE / SERVICE CATEGORIES & SOS DISPATCH -->
+            <div id="cust-view-idle" class="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
+              <div>
+                <!-- Category Grid -->
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-bold text-slate-200">Select Emergency Breakdown</span>
+                  <span class="text-[10px] text-slate-400">Fixed upfront rates</span>
+                </div>
+
+                <div class="grid grid-cols-4 gap-1.5 text-left">
+                  
+                  <!-- Puncture / Mobile Tire Van -->
+                  <button type="button" onclick="selectService('tire', 'Mobile Tire Van &amp; Puncture Patch', 35)" class="srv-card p-2 rounded-xl border border-cust-primary bg-cust-primary/10 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-tire">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="disc" aria-hidden="true" class="lucide lucide-disc w-4 h-4 text-amber-400"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Tire Puncture</div>
+                      <div class="text-[9px] text-slate-400">$35.00</div>
+                    </div>
+                  </button>
+
+                  <!-- Battery Jump / Replacement -->
+                  <button type="button" onclick="selectService('battery', 'Battery Jumpstart / Replace Triage', 40)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-battery">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" aria-hidden="true" class="lucide lucide-zap w-4 h-4 text-yellow-400"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"></path></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Dead Battery</div>
+                      <div class="text-[9px] text-slate-400">$40.00</div>
+                    </div>
+                  </button>
+
+                  <!-- Radiator & Overheat -->
+                  <button type="button" onclick="selectService('overheat', 'Radiator Flush &amp; Overheat Rescue', 50)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-overheat">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="thermometer-sun" aria-hidden="true" class="lucide lucide-thermometer-sun w-4 h-4 text-rose-400"><path d="M12 2v2"></path><path d="M12 8a4 4 0 0 0-1.645 7.647"></path><path d="M2 12h2"></path><path d="M20 14.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m6.34 17.66-1.41 1.41"></path></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Overheating</div>
+                      <div class="text-[9px] text-slate-400">$50.00</div>
+                    </div>
+                  </button>
+
+                  <!-- Fuel / Misfuel Drain -->
+                  <button type="button" onclick="selectService('fuel', 'Emergency Fuel / Misfuel Drain', 45)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-fuel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="fuel" aria-hidden="true" class="lucide lucide-fuel w-4 h-4 text-emerald-400"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5"></path><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16"></path><path d="M2 21h13"></path><path d="M3 9h11"></path></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Fuel / Drain</div>
+                      <div class="text-[9px] text-slate-400">$45.00</div>
+                    </div>
+                  </button>
+
+                  <!-- Vehicle Lockout -->
+                  <button type="button" onclick="selectService('lockout', 'Non-Destructive Vehicle Lockout', 40)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-lockout">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="key" aria-hidden="true" class="lucide lucide-key w-4 h-4 text-purple-400"><path d="m2 21 9.6-9.6"></path><path d="m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19"></path><circle cx="15.5" cy="7.5" r="5.5"></circle></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Lockout</div>
+                      <div class="text-[9px] text-slate-400">$40.00</div>
+                    </div>
+                  </button>
+
+                  <!-- Flatbed Tow Truck -->
+                  <button type="button" onclick="selectService('tow', 'Hydraulic Flatbed Towing (AWD Safe)', 85)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-tow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="truck" aria-hidden="true" class="lucide lucide-truck w-4 h-4 text-blue-400"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Flatbed Tow</div>
+                      <div class="text-[9px] text-slate-400">$85.00</div>
+                    </div>
+                  </button>
+
+                  <!-- EV Booster -->
+                  <button type="button" onclick="selectService('ev-charge', 'Mobile EV Rapid Booster (15kW)', 60)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-ev-charge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="battery-charging" aria-hidden="true" class="lucide lucide-battery-charging w-4 h-4 text-teal-400"><path d="m11 7-3 5h4l-3 5"></path><path d="M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935"></path><path d="M22 14v-4"></path><path d="M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936"></path></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">EV Booster</div>
+                      <div class="text-[9px] text-slate-400">$60.00</div>
+                    </div>
+                  </button>
+
+                  <!-- Acoustic AI Diagnostic -->
+                  <button type="button" onclick="selectService('acoustic', 'AI Engine Noise &amp; DTC Diagnosis', 30)" class="srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95" id="srv-acoustic">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="activity" aria-hidden="true" class="lucide lucide-activity w-4 h-4 text-pink-400"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>
+                    <div>
+                      <div class="text-[10px] font-bold text-white leading-tight">Acoustic AI</div>
+                      <div class="text-[9px] text-slate-400">$30.00</div>
+                    </div>
+                  </button>
+
+                </div>
+
+                <!-- Upfront Pricing Summary & OPTIONAL Micro Life Cover Rider -->
+                <div class="mt-3 bg-slate-800/80 border border-slate-700/80 rounded-xl p-2.5 space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <div>
+                      <span class="text-[10px] text-slate-400 block" id="cust-selected-srv-name">Tire Puncture Mobile Van</span>
+                      <span class="text-sm font-black text-white" id="cust-base-price-tag">$35.00</span>
+                      <span class="text-[9px] text-emerald-400 ml-1">Includes labor &amp; dispatch</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-[10px] text-slate-400 block">Nearest Van</span>
+                      <span class="text-xs font-bold text-emerald-400 flex items-center gap-1 justify-end">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        ~2.1 km (Alex)
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- NON-INTRUSIVE LIFE / ACCIDENT MICRO-COVER RIDER CHECKBOX -->
+                  <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer select-none text-[11px] text-slate-300">
+                      <input type="checkbox" id="rider-life-cover" onchange="toggleLifeCoverRider()" class="w-3.5 h-3.5 rounded text-brand-600 bg-slate-900 border-slate-700 focus:ring-0 cursor-pointer">
+                      <span>Add 24h Personal Accident &amp; Life Cover</span>
+                    </label>
+                    <span class="text-[10px] font-bold text-amber-400">+$0.50</span>
+                  </div>
+                  <p class="text-[9px] text-slate-400 leading-tight">Secondary micro-cover: Up to $10,000 accidental hospitalization &amp; life protection during breakdown.</p>
+                </div>
+              </div>
+
+              <!-- 1-TAP SOS DISPATCH BUTTON -->
+              <div>
+                <button id="btn-request-sos" onclick="customerSendSOS()" class="w-full bg-gradient-to-r from-brand-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-extrabold py-3 rounded-xl shadow-lg shadow-orange-600/30 flex items-center justify-center gap-2 active:scale-98 transition text-xs tracking-wider">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="radio" aria-hidden="true" class="lucide lucide-radio w-4 h-4 animate-pulse"><path d="M16.247 7.761a6 6 0 0 1 0 8.478"></path><path d="M19.075 4.933a10 10 0 0 1 0 14.134"></path><path d="M4.925 19.067a10 10 0 0 1 0-14.134"></path><path d="M7.753 16.239a6 6 0 0 1 0-8.478"></path><circle cx="12" cy="12" r="2"></circle></svg>
+                  <span>DISPATCH EMERGENCY RESCUE NOW</span>
+                </button>
+                <div class="flex items-center justify-center gap-2 text-[10px] text-slate-500 mt-1">
+                  <span>Cashless Escrow Hold</span> • <span>Real-Time Tech Tracking</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- STATE 2: SEARCHING / DISPATCHING (RADAR) -->
+            <div id="cust-view-searching" class="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-4 hidden">
+              <div class="relative w-20 h-20 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-2 border-sky-500/30 animate-ping"></div>
+                <div class="w-16 h-16 rounded-full bg-sky-500/20 border border-sky-400 flex items-center justify-center text-sky-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="radar" aria-hidden="true" class="lucide lucide-radar w-8 h-8 animate-spin" style="animation-duration: 3s;"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"></path><path d="M4 6h.01"></path><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"></path><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"></path><path d="M12 18h.01"></path><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"></path><circle cx="12" cy="12" r="2"></circle><path d="m13.41 10.59 5.66-5.66"></path></svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">Broadcasting Emergency SOS...</h3>
+                <p class="text-xs text-slate-400 mt-1 max-w-[240px]">Matching with nearest certified technician within 5km radius with tools for <span id="cust-search-item" class="text-sky-300 font-semibold">Tire Puncture</span>.</p>
+              </div>
+              <button onclick="cancelCustomerRequest()" class="text-xs text-slate-400 hover:text-red-400 underline pt-2">
+                Cancel Emergency Request
+              </button>
+            </div>
+
+            <!-- STATE 3: MECHANIC EN ROUTE & LIVE TELEMETRY TRACKING -->
+            <div id="cust-view-tracking" class="p-3.5 flex-1 flex flex-col justify-between hidden space-y-3">
+              <div class="space-y-2.5">
+                <!-- Status Banner -->
+                <div class="bg-sky-950/70 border border-sky-700/80 p-2.5 rounded-xl flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-sky-600/30 border border-sky-500 flex items-center justify-center text-sky-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="truck" aria-hidden="true" class="lucide lucide-truck w-4 h-4"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
+                    </div>
+                    <div>
+                      <div class="text-[10px] font-bold text-sky-300 uppercase" id="cust-status-badge">Van En Route</div>
+                      <div class="text-xs font-bold text-white" id="cust-status-eta">ETA: 4 minutes (1.8 km)</div>
+                    </div>
+                  </div>
+                  <span id="cust-van-speed" class="text-[10px] font-mono bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/40">45 km/h</span>
+                </div>
+
+                <!-- Mechanic Details Card -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-full bg-slate-700 border-2 border-emerald-500 flex items-center justify-center font-bold text-white text-xs">
+                      AM
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-white flex items-center gap-1">
+                        <span>Alex Miller</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="badge-check" aria-hidden="true" class="lucide lucide-badge-check w-3.5 h-3.5 text-sky-400"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m16 9-5.5 5.5L8 12"></path></svg>
+                      </div>
+                      <div class="text-[10px] text-slate-400">Van #72 • Mobile Hydraulic Press</div>
+                    </div>
+                  </div>
+                  <div class="flex gap-1.5">
+                    <button onclick="simulateCustomerCall()" class="p-1.5 bg-slate-700 hover:bg-slate-600 text-emerald-400 rounded-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="phone" aria-hidden="true" class="lucide lucide-phone w-3.5 h-3.5"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path></svg>
+                    </button>
+                    <button onclick="simulateCustomerCall()" class="p-1.5 bg-slate-700 hover:bg-slate-600 text-sky-400 rounded-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="message-square" aria-hidden="true" class="lucide lucide-message-square w-3.5 h-3.5"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"></path></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- IN-APP QUOTATION APPROVAL MODAL / BANNER (TRIGGERS WHEN MECHANIC ADDS PARTS) -->
+                <div id="cust-extra-quote-banner" class="hidden bg-amber-950/90 border-2 border-amber-500 p-3 rounded-xl shadow-lg">
+                  <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="alert-triangle" aria-hidden="true" class="lucide lucide-alert-triangle w-4 h-4 text-amber-400 shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                    <div class="flex-1">
+                      <div class="text-xs font-bold text-amber-200">On-Site Diagnosis: Extra Part Required</div>
+                      <p class="text-[11px] text-slate-300 mt-0.5" id="cust-quote-desc">Mechanic discovered sidewall rupture: Heavy Duty Tubeless Plug + Rim Seal ($18.00).</p>
+                      <div class="flex gap-2 mt-2">
+                        <button onclick="customerApproveExtra(true)" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-1.5 rounded-lg text-xs transition">
+                          Approve Part Quote
+                        </button>
+                        <button onclick="customerApproveExtra(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-400 px-3 py-1.5 rounded-lg text-xs transition">
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Step Checklist -->
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-2.5 text-[11px] space-y-1.5">
+                  <div class="flex items-center gap-2 text-emerald-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle" aria-hidden="true" class="lucide lucide-check-circle w-3.5 h-3.5"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
+                    <span>SOS Dispatched &amp; Tech Assigned</span>
+                  </div>
+                  <div id="cust-timeline-arrival" class="flex items-center gap-2 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="circle" aria-hidden="true" class="lucide lucide-circle w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle></svg>
+                    <span>Arrival &amp; OBD/Visual Inspection</span>
+                  </div>
+                  <div id="cust-timeline-repair" class="flex items-center gap-2 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="circle" aria-hidden="true" class="lucide lucide-circle w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle></svg>
+                    <span>Roadside Recovery in Progress</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Night Hazard / Police Beacon -->
+              <button onclick="showToast('🚨 Highway Hazard Beacon activated &amp; emergency contacts alerted!')" class="w-full bg-slate-800 hover:bg-red-950/50 border border-slate-700 hover:border-red-600/50 text-slate-400 hover:text-red-400 py-1.5 rounded-xl text-[11px] flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shield-alert" aria-hidden="true" class="lucide lucide-shield-alert w-3.5 h-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                <span>Emergency Strobe Light &amp; Police SOS</span>
+              </button>
+            </div>
+
+            <!-- STATE 4: COMPLETED & DIGITAL INVOICE -->
+            <div id="cust-view-completed" class="p-4 flex-1 flex flex-col justify-between hidden text-center">
+              <div class="space-y-3 pt-2">
+                <div class="w-12 h-12 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 mx-auto flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check" aria-hidden="true" class="lucide lucide-check w-6 h-6"><path d="M20 6 9 17l-5-5"></path></svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-white">Car Roadworthy &amp; Tested!</h3>
+                  <p class="text-[11px] text-slate-400">Escrow released to Mechanic Alex. Digital receipt issued.</p>
+                </div>
+
+                <!-- Bill Receipt -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-left space-y-1 text-xs">
+                  <div class="flex justify-between text-slate-400">
+                    <span id="bill-srv-name">Tire Puncture Mobile Van</span>
+                    <span id="bill-base-cost">$35.00</span>
+                  </div>
+                  <div id="bill-extra-row" class="flex justify-between text-slate-400 hidden">
+                    <span id="bill-extra-name">Approved Replacement Part</span>
+                    <span id="bill-extra-cost">$0.00</span>
+                  </div>
+                  <div id="bill-rider-row" class="flex justify-between text-slate-400 hidden">
+                    <span>24h Personal Accident &amp; Life Rider</span>
+                    <span>$0.50</span>
+                  </div>
+                  <div class="flex justify-between text-slate-400">
+                    <span>Platform Tech Levy</span>
+                    <span>$2.00</span>
+                  </div>
+                  <div class="border-t border-slate-700 pt-1.5 flex justify-between font-bold text-white text-sm">
+                    <span>Total Paid</span>
+                    <span id="bill-total-cost" class="text-emerald-400">$37.00</span>
+                  </div>
+                </div>
+
+                <!-- Star Rating -->
+                <div class="text-xs text-slate-400">
+                  <span>Rate Tech Alex:</span>
+                  <div class="flex justify-center gap-1.5 mt-1 text-yellow-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="star" aria-hidden="true" class="lucide lucide-star w-4 h-4 fill-current cursor-pointer hover:scale-125 transition"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="star" aria-hidden="true" class="lucide lucide-star w-4 h-4 fill-current cursor-pointer hover:scale-125 transition"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="star" aria-hidden="true" class="lucide lucide-star w-4 h-4 fill-current cursor-pointer hover:scale-125 transition"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="star" aria-hidden="true" class="lucide lucide-star w-4 h-4 fill-current cursor-pointer hover:scale-125 transition"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="star" aria-hidden="true" class="lucide lucide-star w-4 h-4 fill-current cursor-pointer hover:scale-125 transition"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="resetPrototype()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl border border-slate-700 text-xs transition">
+                Back to Vehicle Dashboard
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Phone Bottom Navigation Bar -->
+          <div class="px-6 py-2 bg-slate-900 border-t border-slate-800 flex justify-around text-slate-500 text-xs">
+            <button class="flex flex-col items-center gap-0.5 text-cust-accent">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wrench" aria-hidden="true" class="lucide lucide-wrench w-4 h-4"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"></path></svg>
+              <span class="text-[9px]">Roadside</span>
+            </button>
+            <button onclick="toggleDiagnosticsModal(true)" class="flex flex-col items-center gap-0.5 hover:text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="activity" aria-hidden="true" class="lucide lucide-activity w-4 h-4"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>
+              <span class="text-[9px]">Diagnostics</span>
+            </button>
+            <button onclick="showToast('Vehicle Digital Glovebox: Registration &amp; Emission Cert valid')" class="flex flex-col items-center gap-0.5 hover:text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="folder" aria-hidden="true" class="lucide lucide-folder w-4 h-4"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>
+              <span class="text-[9px]">Glovebox</span>
+            </button>
+            <button class="flex flex-col items-center gap-0.5 hover:text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" aria-hidden="true" class="lucide lucide-user w-4 h-4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span class="text-[9px]">Profile</span>
+            </button>
+          </div>
+          <div class="w-28 h-1 bg-slate-700 rounded-full mx-auto my-1"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- PHONE 2: MECHANIC / TECHNICIAN PARTNER APP                     -->
+      <!-- ============================================================== -->
+      <div id="container-mech" class="flex flex-col items-center w-full transition-all">
+        <div class="flex items-center justify-between w-full max-w-[410px] mb-2 px-2 text-xs">
+          <span class="font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wrench" aria-hidden="true" class="lucide lucide-wrench w-3.5 h-3.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"></path></svg> Mechanic Pro Partner
+          </span>
+          <span class="text-slate-400 text-[11px] font-mono">Radius: 10 km Geofence</span>
+        </div>
+
+        <div class="phone-shell border-slate-800 bg-slate-900 text-slate-100 flex flex-col">
+          <!-- Dynamic Island -->
+          <div class="dynamic-island">
+            <div class="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
+            <div id="mech-island-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          </div>
+
+          <!-- Top Status Bar -->
+          <div class="px-6 pt-2.5 pb-1 flex justify-between items-center text-[10px] text-slate-400 font-medium z-10">
+            <span id="mech-clock">11:24 AM</span>
+            <div class="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" aria-hidden="true" class="lucide lucide-wifi w-3 h-3 text-slate-300"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>
+              <span class="font-mono text-[9px] text-emerald-400">5G PRO</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="battery" aria-hidden="true" class="lucide lucide-battery w-3.5 h-3.5 text-slate-300"><path d="M 22 14 L 22 10"></path><rect x="2" y="6" width="16" height="12" rx="2"></rect></svg>
+            </div>
+          </div>
+
+          <!-- Mechanic Screen Body -->
+          <div class="flex-1 flex flex-col overflow-y-auto no-scrollbar relative" id="mech-screen">
+
+            <!-- Mechanic Header & Online Toggle -->
+            <div class="px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 sticky top-0 z-20">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-mech-primary flex items-center justify-center font-bold text-xs text-white">PRO</div>
+                <div>
+                  <div class="text-xs font-bold text-white">Alex Miller</div>
+                  <div class="text-[9px] text-emerald-400 font-medium">Van #72 • Mobile Workshop</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="mech-duty-label" class="text-[10px] font-bold text-emerald-400">ONLINE</span>
+                <button id="mech-toggle-btn" onclick="toggleMechanicDuty()" class="w-10 h-5 bg-emerald-600 rounded-full p-0.5 transition-colors focus:outline-none">
+                  <div id="mech-toggle-knob" class="w-4 h-4 bg-white rounded-full shadow transform translate-x-5 transition"></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- INTERACTIVE LEAFLET GPS MAP (MECHANIC ROUTE) -->
+            <div class="relative w-full h-56 bg-slate-950 border-b border-slate-800 select-none">
+              <div id="mech-map" class="w-full h-full z-0 leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(-180px, -97px, 0px) scale(2);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(-180px, -97px, 0px) scale(1);"><img alt="" src="https://b.basemaps.cartocdn.com/rastertiles/voyager/15/23653/15753@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(312px, 46px, 0px); opacity: 1;"><img alt="" src="https://c.basemaps.cartocdn.com/rastertiles/voyager/15/23653/15754@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(312px, 302px, 0px); opacity: 1;"><img alt="" src="https://a.basemaps.cartocdn.com/rastertiles/voyager/15/23652/15753@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(56px, 46px, 0px); opacity: 1;"><img alt="" src="https://c.basemaps.cartocdn.com/rastertiles/voyager/15/23654/15753@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(568px, 46px, 0px); opacity: 1;"><img alt="" src="https://b.basemaps.cartocdn.com/rastertiles/voyager/15/23652/15754@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(56px, 302px, 0px); opacity: 1;"><img alt="" src="https://a.basemaps.cartocdn.com/rastertiles/voyager/15/23654/15754@2x.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(568px, 302px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="468" height="268" viewBox="-39 -22 468 268" style="transform: translate3d(-39px, -22px, 0px);"><g><path class="leaflet-interactive" stroke="#10b981" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6, 6" fill="none" d="M211 126L143 246"></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon custom-marker leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -15px; margin-top: -15px; width: 30px; height: 30px; transform: translate3d(211px, 126px, 0px); z-index: 126;"><div style="background:#10b981; width:30px; height:30px; border-radius:50%; border:2px solid #fff; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:bold;">🛠️</div></div><div class="leaflet-marker-icon custom-marker leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(24px, 489px, 0px); z-index: 489;"><div style="background:#ef4444; width:28px; height:28px; border-radius:50%; border:2px solid #fff; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold;">🚗</div></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(6.05523e+06px, 4.03293e+06px, 0px) scale(16384);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"></div></div></div>
+              
+              <!-- Turn-by-Turn Nav Overlay -->
+              <div id="mech-nav-banner" class="hidden absolute top-2 inset-x-2 z-[400] bg-slate-900/95 backdrop-blur border border-emerald-500/50 px-3 py-1.5 rounded-lg text-xs flex items-center justify-between">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="corner-up-right" aria-hidden="true" class="lucide lucide-corner-up-right w-4 h-4"><path d="m15 14 5-5-5-5"></path><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg>
+                  <span id="mech-nav-step">Turn Right onto Galle Rd (400m)</span>
+                </div>
+                <span id="mech-nav-eta" class="font-mono text-white text-[11px]">ETA 4m</span>
+              </div>
+            </div>
+
+            <!-- STATE 1: IDLE / EARNINGS LEDGER & RADAR -->
+            <div id="mech-view-idle" class="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
+              <div>
+                <!-- Today's Wallet Ledger -->
+                <div class="bg-gradient-to-br from-emerald-950/40 via-slate-800/80 to-slate-900 border border-emerald-500/30 rounded-2xl p-3">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400 text-[10px]">Today's Direct Earnings</span>
+                    <span class="text-emerald-400 font-bold text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Instant Payout</span>
+                  </div>
+                  <div class="text-xl font-black text-white mt-1" id="mech-wallet-val">$168.50</div>
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-700/60">
+                    <span>Rescues Completed: <strong>5</strong></span>
+                    <span>Rating: <strong class="text-yellow-400">★ 4.95</strong></span>
+                  </div>
+                </div>
+
+                <!-- Van Tools & Diagnostics Checklist -->
+                <div class="mt-3 space-y-1.5">
+                  <div class="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Van Diagnostic Tools Ready</div>
+                  <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                    <div class="bg-slate-800/60 p-2 rounded-xl border border-slate-700 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="gauge" aria-hidden="true" class="lucide lucide-gauge w-3.5 h-3.5 text-sky-400"><path d="m12 14 4-4"></path><path d="M3.34 19a10 10 0 1 1 17.32 0"></path></svg>
+                      <span>Compressor 150 PSI</span>
+                    </div>
+                    <div class="bg-slate-800/60 p-2 rounded-xl border border-slate-700 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" aria-hidden="true" class="lucide lucide-zap w-3.5 h-3.5 text-yellow-400"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"></path></svg>
+                      <span>12V/24V Jump Pack</span>
+                    </div>
+                    <div class="bg-slate-800/60 p-2 rounded-xl border border-slate-700 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cpu" aria-hidden="true" class="lucide lucide-cpu w-3.5 h-3.5 text-purple-400"><path d="M12 20v2"></path><path d="M12 2v2"></path><path d="M17 20v2"></path><path d="M17 2v2"></path><path d="M2 12h2"></path><path d="M2 17h2"></path><path d="M2 7h2"></path><path d="M20 12h2"></path><path d="M20 17h2"></path><path d="M20 7h2"></path><path d="M7 20v2"></path><path d="M7 2v2"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="8" y="8" width="8" height="8" rx="1"></rect></svg>
+                      <span>OBD-II DTC Scanner</span>
+                    </div>
+                    <div class="bg-slate-800/60 p-2 rounded-xl border border-slate-700 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="disc" aria-hidden="true" class="lucide lucide-disc w-3.5 h-3.5 text-amber-400"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                      <span>Hydraulic Jack &amp; Plugs</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-3 p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 text-center">
+                  <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping mx-auto mb-1.5"></div>
+                  <p class="text-xs font-semibold text-slate-200">Listening for emergency broadcasts...</p>
+                  <p class="text-[10px] text-slate-500">Auto-dispatch enabled within 10km.</p>
+                </div>
+              </div>
+
+              <div class="text-center text-[9px] text-slate-500">
+                RescueWrench Certified Partner • Licensed Roadside Operator
+              </div>
+            </div>
+
+            <!-- STATE 2: INCOMING EMERGENCY SOS ALERT POP-UP (30S COUNTDOWN) -->
+            <div id="mech-view-alert" class="p-3.5 flex-1 flex flex-col justify-between hidden bg-slate-900">
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div class="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="siren" aria-hidden="true" class="lucide lucide-siren w-4 h-4 animate-bounce"><path d="M7 18v-6a5 5 0 1 1 10 0v6"></path><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"></path><path d="M21 12h1"></path><path d="M18.5 4.5 18 5"></path><path d="M2 12h1"></path><path d="M12 2v1"></path><path d="m4.929 4.929.707.707"></path><path d="M12 12v6"></path></svg>
+                    <span>Emergency SOS Alert!</span>
+                  </div>
+                  <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/50 flex items-center justify-center font-bold text-xs" id="mech-countdown">
+                    30s
+                  </div>
+                </div>
+
+                <!-- Payout Box -->
+                <div class="bg-emerald-950/60 border border-emerald-600/70 p-2.5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <div class="text-[9px] text-emerald-300 font-bold uppercase">Estimated Tech Cut (85%)</div>
+                    <div class="text-lg font-black text-white" id="mech-alert-payout">$29.75</div>
+                    <div class="text-[9px] text-emerald-400">Direct deposit upon sign-off</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[9px] text-slate-400">Distance</div>
+                    <div class="text-xs font-bold text-slate-200">1.8 km (4m drive)</div>
+                  </div>
+                </div>
+
+                <!-- Incident Specs -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 space-y-1.5 text-xs">
+                  <div>
+                    <div class="text-[9px] text-slate-400">Reported Problem</div>
+                    <div class="text-white font-bold flex items-center gap-1" id="mech-alert-issue">
+                      Tire Puncture Mobile Van
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-[9px] text-slate-400">Vehicle Specs</div>
+                    <div class="text-slate-200" id="mech-alert-vehicle">Toyota Aqua • WP-CAG-8921</div>
+                    <div class="text-[10px] text-slate-400 font-mono" id="mech-alert-specs">Tires: 185/65 R15 • 2WD FWD</div>
+                  </div>
+                  <div>
+                    <div class="text-[9px] text-slate-400">Location</div>
+                    <div class="text-slate-200">Galle Rd, Mile 4 (Stranded shoulder)</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Accept / Decline -->
+              <div class="space-y-1.5 pt-2">
+                <button onclick="mechanicAcceptJob()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-98 transition text-xs">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle" aria-hidden="true" class="lucide lucide-check-circle w-4 h-4"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
+                  <span>ACCEPT EMERGENCY RESCUE</span>
+                </button>
+                <button onclick="mechanicDeclineJob()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-400 font-medium py-2 rounded-xl text-xs transition">
+                  Decline &amp; Re-route
+                </button>
+              </div>
+            </div>
+
+            <!-- STATE 3: ACTIVE RESCUE / ON-SITE DIAGNOSIS & QUOTE PARTS BUILDER -->
+            <div id="mech-view-active" class="p-3.5 flex-1 flex flex-col justify-between hidden space-y-2.5">
+              <div class="space-y-2.5">
+                <!-- Status & Driving Controls -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-2.5">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400 text-[10px]">Job Progress</span>
+                    <span id="mech-job-status-badge" class="text-sky-400 font-bold bg-sky-500/20 px-2 py-0.5 rounded-full text-[10px]">Navigating to Car</span>
+                  </div>
+
+                  <div class="mt-2 flex gap-1.5">
+                    <button id="btn-simulate-drive" onclick="simulateDriveMovement()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play" aria-hidden="true" class="lucide lucide-play w-3 h-3"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
+                      <span>Simulate Drive</span>
+                    </button>
+                    <button id="btn-mark-arrived" onclick="mechanicMarkArrived()" class="flex-1 bg-slate-700 hover:bg-emerald-600 text-white text-xs font-semibold py-1.5 rounded-lg transition flex items-center justify-center gap-1 opacity-50 cursor-not-allowed" disabled="">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" aria-hidden="true" class="lucide lucide-map-pin w-3 h-3"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      <span>Mark Arrived</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- ON-SITE QUOTE BUILDER (PUSHES INSTANTLY TO DRIVER APP) -->
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 space-y-2">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-white">Add Spare Parts Quote</span>
+                    <span class="text-[9px] text-amber-400 font-medium">Synced with Customer</span>
+                  </div>
+
+                  <div class="flex gap-1.5">
+                    <select id="mech-part-picker" class="bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded-lg px-2 py-1.5 flex-1 focus:outline-none">
+                      <option value="Heavy Duty Tubeless Plug + Rim Seal|18.00">Tubeless Plug &amp; Seal ($18.00)</option>
+                      <option value="12V Maintenance-Free Battery Pack|75.00">12V Battery Pack ($75.00)</option>
+                      <option value="OEM Radiator Coolant Hose + Clamp|32.00">Radiator Hose + Fluid ($32.00)</option>
+                      <option value="Synthetic Motor Oil 1L Top-up|15.00">1L Synthetic Oil ($15.00)</option>
+                    </select>
+                    <button onclick="mechanicPushQuote()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold transition whitespace-nowrap active:scale-95">
+                      + Push Quote
+                    </button>
+                  </div>
+                  <div id="mech-quote-status" class="text-[10px] text-slate-400 italic">No extra parts quoted yet.</div>
+                </div>
+
+                <!-- Digital Sign-Off Pad Simulator -->
+                <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-2 text-xs space-y-1">
+                  <div class="flex justify-between items-center text-[10px] text-slate-300">
+                    <span>Driver Signature Pad</span>
+                    <span class="text-emerald-400">Touch to sign</span>
+                  </div>
+                  <div class="w-full h-12 bg-slate-900 rounded border border-slate-700 flex items-center justify-center text-slate-500 font-mono text-[10px] cursor-crosshair select-none" onclick="this.innerHTML='&lt;span class=\'text-sky-400 italic font-serif text-sm\'&gt;John Doe (Signed)&lt;/span&gt;'">
+                    [ Tap Here to Simulate Customer Signature ]
+                  </div>
+                </div>
+              </div>
+
+              <!-- Complete Job & Collect -->
+              <button id="btn-complete-job" onclick="mechanicCompleteJob()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-98 transition text-xs opacity-50 cursor-not-allowed" disabled="">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-check" aria-hidden="true" class="lucide lucide-check-check w-4 h-4"><path d="M18 6 7 17l-5-5"></path><path d="m22 10-7.5 7.5L13 16"></path></svg>
+                <span>COMPLETE JOB &amp; RELEASE ESCROW</span>
+              </button>
+            </div>
+
+            <!-- STATE 4: SUMMARY & WALLET BALANCE -->
+            <div id="mech-view-summary" class="p-4 flex-1 flex flex-col justify-between hidden text-center">
+              <div class="space-y-3 pt-2">
+                <div class="w-12 h-12 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 mx-auto flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="dollar-sign" aria-hidden="true" class="lucide lucide-dollar-sign w-6 h-6"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-white">Rescue Completed &amp; Paid!</h3>
+                  <p class="text-[11px] text-slate-400">Funds credited instantly to your partner balance.</p>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-left space-y-1 text-xs">
+                  <div class="flex justify-between text-slate-400">
+                    <span>Labor Base Cut (85%)</span>
+                    <span id="mech-sum-labor">$29.75</span>
+                  </div>
+                  <div id="mech-sum-parts-row" class="flex justify-between text-slate-400 hidden">
+                    <span>Parts Reimbursement (100%)</span>
+                    <span id="mech-sum-parts">$0.00</span>
+                  </div>
+                  <div class="border-t border-slate-700 pt-1 flex justify-between font-bold text-emerald-400 text-sm">
+                    <span>Net Earned</span>
+                    <span id="mech-sum-total">$29.75</span>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="resetPrototype()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-xs transition">
+                Ready for Next Emergency
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Bottom Phone Navigation (Partner) -->
+          <div class="px-6 py-2 bg-slate-900 border-t border-slate-800 flex justify-around text-slate-500 text-xs">
+            <button class="flex flex-col items-center gap-0.5 text-mech-accent">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="navigation" aria-hidden="true" class="lucide lucide-navigation w-4 h-4"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+              <span class="text-[9px]">Roadside</span>
+            </button>
+            <button class="flex flex-col items-center gap-0.5 hover:text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wallet" aria-hidden="true" class="lucide lucide-wallet w-4 h-4"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>
+              <span class="text-[9px]">Ledger</span>
+            </button>
+            <button class="flex flex-col items-center gap-0.5 hover:text-slate-300">
+              <i data-lucide="tool" class="w-4 h-4"></i>
+              <span class="text-[9px]">Inventory</span>
+            </button>
+            <button class="flex flex-col items-center gap-0.5 hover:text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" aria-hidden="true" class="lucide lucide-user w-4 h-4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span class="text-[9px]">Profile</span>
+            </button>
+          </div>
+          <div class="w-28 h-1 bg-slate-700 rounded-full mx-auto my-1"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================= IN-APP MODAL: DEEP OBD-II & ACOUSTIC SCANNER ================= -->
+  <div id="diag-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div class="flex items-center gap-2 text-amber-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cpu" aria-hidden="true" class="lucide lucide-cpu w-5 h-5"><path d="M12 20v2"></path><path d="M12 2v2"></path><path d="M17 20v2"></path><path d="M17 2v2"></path><path d="M2 12h2"></path><path d="M2 17h2"></path><path d="M2 7h2"></path><path d="M20 12h2"></path><path d="M20 17h2"></path><path d="M20 7h2"></path><path d="M7 20v2"></path><path d="M7 2v2"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="8" y="8" width="8" height="8" rx="1"></rect></svg>
+          <h3 class="font-bold text-white text-sm">OBD-II Bluetooth &amp; Acoustic Engine Diagnostic</h3>
+        </div>
+        <button onclick="toggleDiagnosticsModal(false)" class="text-slate-400 hover:text-white p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <!-- Live DTC Code Output -->
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+          <div class="flex justify-between items-center">
+            <span class="text-[10px] text-slate-400">Active Trouble Code (DTC)</span>
+            <span class="px-1.5 py-0.5 bg-rose-500/20 text-rose-400 rounded text-[10px] font-bold">Severity: Critical</span>
+          </div>
+          <div class="font-mono text-amber-400 text-sm font-bold">P0300 — Random / Multiple Cylinder Misfire</div>
+          <p class="text-[10px] text-slate-400">Detected irregular crankshaft acceleration during deceleration. Ignition coil or spark plug failure likely.</p>
+        </div>
+
+        <!-- 10-Second Acoustic Engine Audio Analyzer -->
+        <div class="border border-slate-700 rounded-xl p-3 bg-slate-800/40 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white">AI Acoustic Noise Matching</span>
+            <span class="text-[10px] text-sky-400" id="acoustic-status">Tap mic to record engine sound</span>
+          </div>
+          <button onclick="simulateAudioAcousticScan()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 py-2 rounded-lg flex items-center justify-center gap-2 text-xs font-medium transition">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="mic" aria-hidden="true" class="lucide lucide-mic w-4 h-4 text-rose-400"><path d="M12 19v3"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><rect x="9" y="2" width="6" height="13" rx="3"></rect></svg>
+            <span>Sample 10s Engine Audio</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="pushOBDtoMechanic()" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+          Push DTC &amp; Specs to Mechanic Van
+        </button>
+        <button onclick="toggleDiagnosticsModal(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= IN-APP MODAL: CLOUD DEPLOYMENT & ARCHITECTURE ================= -->
+  <div id="deploy-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sky-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cloud-cog" aria-hidden="true" class="lucide lucide-cloud-cog w-5 h-5"><path d="m10.852 19.772-.383.924"></path><path d="m13.148 14.228.383-.923"></path><path d="M13.148 19.772a3 3 0 1 0-2.296-5.544l-.383-.923"></path><path d="m13.53 20.696-.382-.924a3 3 0 1 1-2.296-5.544"></path><path d="m14.772 15.852.923-.383"></path><path d="m14.772 18.148.923.383"></path><path d="M4.2 15.1a7 7 0 1 1 9.93-9.858A7 7 0 0 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.2"></path><path d="m9.228 15.852-.923-.383"></path><path d="m9.228 18.148-.923.383"></path></svg>
+          <h3 class="font-bold text-white text-base">Production Deployment &amp; Cloud Architecture</h3>
+        </div>
+        <button onclick="toggleDeployModal(false)" class="text-slate-400 hover:text-white p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed">
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-amber-400 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layers" aria-hidden="true" class="lucide lucide-layers w-4 h-4"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"></path></svg> Recommended Stack Overview
+          </h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Frontend Mobile:</strong> Flutter or React Native with WebSockets for real-time telemetry.</li>
+            <li><strong>Backend API &amp; Realtime:</strong> Node.js / Go microservices with Redis Pub/Sub backplane.</li>
+            <li><strong>Database:</strong> PostgreSQL 16 with <code>PostGIS</code> extension for sub-millisecond bounding box geofence queries.</li>
+            <li><strong>Caching &amp; Geospatial Index:</strong> Redis <code>GEOADD</code> and <code>GEORADIUS</code> for active driver and mechanic pins.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-sky-400 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="terminal" aria-hidden="true" class="lucide lucide-terminal w-4 h-4"><path d="M12 19h8"></path><path d="m4 17 6-6-6-6"></path></svg> Docker Compose Deployment
+          </h4>
+          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[10px] text-slate-300 overflow-x-auto"># Start full production cluster
+docker compose up -d
+
+# Verifying PostGIS Extension
+docker exec -it rescue_db psql -U postgres -d rescuewrench -c "CREATE EXTENSION postgis;"
+          </pre>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shield-check" aria-hidden="true" class="lucide lucide-shield-check w-4 h-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg> Split Escrow Payments &amp; Policy Compliance
+          </h4>
+          <p>Utilize Stripe Connect or Adyen Marketplaces: hold the customer's payment upon dispatch, release 85% to the mechanic wallet upon digital signature, and retain 15% platform commission.</p>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-900 border-t border-slate-800 flex justify-end">
+        <button onclick="toggleDeployModal(false)" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
+          Close Guide
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800/95 border border-slate-600 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs transition-all duration-300 transform">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bell" aria-hidden="true" class="lucide lucide-bell w-4 h-4 text-brand-400"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+    <span id="toast-msg">📦 Packaging complete full-stack project ZIP...</span>
+  </div>
+
+  <!-- ================= APPLICATION JAVASCRIPT STATE ENGINE ================= -->
+  <script>
+    // System State
+    const AppState = {
+      isMechanicOnline: true,
+      serviceKey: 'tire',
+      serviceName: 'Mobile Tire Van & Puncture Patch',
+      basePrice: 35.00,
+      hasLifeCoverRider: false,
+      riderCost: 0.50,
+      approvedPartName: null,
+      approvedPartCost: 0.00,
+      selectedVehicleType: 'sedan',
+      workflow: 'IDLE', // 'IDLE' | 'SEARCHING' | 'ALERTED' | 'EN_ROUTE' | 'ARRIVED' | 'COMPLETED'
+      timerInterval: null,
+      // Map Coordinates (Colombo / Galle Rd Highway Simulation)
+      customerCoords: [6.8925, 79.8550],
+      mechanicInitialCoords: [6.9080, 79.8630],
+      mechanicCurrentCoords: [6.9080, 79.8630],
+    };
+
+    let custMap, mechMap;
+    let custCustomerMarker, custMechanicMarker, custRoutePolyline;
+    let mechMechanicMarker, mechCustomerMarker, mechRoutePolyline;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      updateClock();
+      setInterval(updateClock, 30000);
+      initLeafletMaps();
+    });
+
+    function updateClock() {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('cust-clock').textContent = timeStr;
+      document.getElementById('mech-clock').textContent = timeStr;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3500);
+    }
+
+    // Initialize Interactive Leaflet Maps on Both Phones
+    function initLeafletMaps() {
+      const mapOptions = {
+        zoomControl: false,
+        attributionControl: false
+      };
+
+      // Customer Map
+      custMap = L.map('cust-map', mapOptions).setView(AppState.customerCoords, 14);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(custMap);
+
+      // Mechanic Map
+      mechMap = L.map('mech-map', mapOptions).setView(AppState.mechanicInitialCoords, 14);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mechMap);
+
+      // Pin Icons
+      const carIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background:#ef4444; width:28px; height:28px; border-radius:50%; border:2px solid #fff; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold;">🚗</div>`,
+        iconSize: [28, 28]
+      });
+
+      const vanIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background:#10b981; width:30px; height:30px; border-radius:50%; border:2px solid #fff; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:bold;">🛠️</div>`,
+        iconSize: [30, 30]
+      });
+
+      // Markers on Customer Map
+      custCustomerMarker = L.marker(AppState.customerCoords, { icon: carIcon }).addTo(custMap).bindPopup("Your Car (Stranded)");
+      custMechanicMarker = L.marker(AppState.mechanicInitialCoords, { icon: vanIcon }); // added when en-route
+
+      // Markers on Mechanic Map
+      mechMechanicMarker = L.marker(AppState.mechanicInitialCoords, { icon: vanIcon }).addTo(mechMap).bindPopup("Your Mobile Van #72");
+      mechCustomerMarker = L.marker(AppState.customerCoords, { icon: carIcon }).addTo(mechMap).bindPopup("Stranded Customer");
+
+      // Draw initial road route connecting them
+      const routeCoords = [AppState.mechanicInitialCoords, [6.9010, 79.8590], AppState.customerCoords];
+      custRoutePolyline = L.polyline(routeCoords, { color: '#0284c7', weight: 4, dashArray: '6, 6' });
+      mechRoutePolyline = L.polyline(routeCoords, { color: '#10b981', weight: 4, dashArray: '6, 6' }).addTo(mechMap);
+    }
+
+    // Mobile View Toggle between Phones
+    function switchMobileView(view) {
+      const custContainer = document.getElementById('container-cust');
+      const mechContainer = document.getElementById('container-mech');
+      const tabCust = document.getElementById('tab-cust');
+      const tabMech = document.getElementById('tab-mech');
+
+      if (view === 'cust') {
+        custContainer.classList.remove('hidden');
+        mechContainer.classList.add('hidden');
+        tabCust.className = 'px-2.5 py-1 rounded-lg bg-cust-primary text-white font-medium';
+        tabMech.className = 'px-2.5 py-1 rounded-lg text-slate-400 font-medium';
+        setTimeout(() => custMap.invalidateSize(), 200);
+      } else {
+        custContainer.classList.add('hidden');
+        mechContainer.classList.remove('hidden');
+        tabCust.className = 'px-2.5 py-1 rounded-lg text-slate-400 font-medium';
+        tabMech.className = 'px-2.5 py-1 rounded-lg bg-mech-primary text-white font-medium';
+        setTimeout(() => mechMap.invalidateSize(), 200);
+      }
+    }
+
+    // Vehicle Selection Switcher
+    function updateVehicleSpecs() {
+      const type = document.getElementById('vehicle-picker').value;
+      AppState.selectedVehicleType = type;
+      const tire = document.getElementById('cust-tire-spec');
+      const batt = document.getElementById('cust-batt-spec');
+      const drive = document.getElementById('cust-drive-spec');
+
+      if (type === 'suv') {
+        tire.textContent = 'Tires: 265/65 R17 (Off-Road)';
+        batt.textContent = '12V Battery: 12.8V (OK)';
+        drive.textContent = 'AWD / 4WD (Flatbed Only)';
+      } else if (type === 'ev') {
+        tire.textContent = 'Tires: 235/45 R18 (EV Rated)';
+        batt.textContent = 'Main Battery: 4% Low Charge!';
+        drive.textContent = 'Dual Motor AWD';
+      } else if (type === 'bike') {
+        tire.textContent = 'Tires: 140/60 R17 (Tubeless)';
+        batt.textContent = '12V 5Ah (Low)';
+        drive.textContent = 'Chain 2-Wheel';
+      } else {
+        tire.textContent = 'Tires: 185/65 R15 (Good)';
+        batt.textContent = '12V Battery: 12.6V (Healthy)';
+        drive.textContent = '2WD / FWD';
+      }
+      showToast('Switched vehicle profile & diagnostic parameters');
+    }
+
+    // Select Breakdown Category
+    function selectService(key, name, price) {
+      AppState.serviceKey = key;
+      AppState.serviceName = name;
+      AppState.basePrice = price;
+
+      document.querySelectorAll('.srv-card').forEach(c => {
+        c.className = 'srv-card p-2 rounded-xl border border-slate-800 bg-slate-800/60 text-left transition flex flex-col justify-between h-20 active:scale-95';
+      });
+
+      const selected = document.getElementById(`srv-${key}`);
+      if (selected) {
+        selected.className = 'srv-card p-2 rounded-xl border border-cust-primary bg-cust-primary/10 text-left transition flex flex-col justify-between h-20 active:scale-95';
+      }
+
+      document.getElementById('cust-selected-srv-name').textContent = name;
+      document.getElementById('cust-base-price-tag').textContent = `$${price.toFixed(2)}`;
+    }
+
+    // Toggle 24-Hour Accident/Life Cover Micro-Rider ($0.50)
+    function toggleLifeCoverRider() {
+      AppState.hasLifeCoverRider = document.getElementById('rider-life-cover').checked;
+      if (AppState.hasLifeCoverRider) {
+        showToast('🛡️ 24h Personal Accident & Life Cover Rider added (+$0.50)');
+      }
+    }
+
+    // Mechanic Duty Status Toggle
+    function toggleMechanicDuty() {
+      AppState.isMechanicOnline = !AppState.isMechanicOnline;
+      const btn = document.getElementById('mech-toggle-btn');
+      const knob = document.getElementById('mech-toggle-knob');
+      const label = document.getElementById('mech-duty-label');
+      const islandDot = document.getElementById('mech-island-dot');
+
+      if (AppState.isMechanicOnline) {
+        btn.classList.replace('bg-slate-700', 'bg-emerald-600');
+        knob.classList.replace('translate-x-0', 'translate-x-5');
+        label.textContent = 'ONLINE';
+        label.className = 'text-[10px] font-bold text-emerald-400';
+        islandDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        showToast('Mechanic Alex is now Online & Ready');
+      } else {
+        btn.classList.replace('bg-emerald-600', 'bg-slate-700');
+        knob.classList.replace('translate-x-5', 'translate-x-0');
+        label.textContent = 'OFFLINE';
+        label.className = 'text-[10px] font-bold text-slate-500';
+        islandDot.className = 'w-2 h-2 rounded-full bg-slate-600';
+        showToast('Mechanic is now Offline');
+      }
+    }
+
+    // ================= REAL-TIME DUAL SYNC WORKFLOW ================= //
+
+    // STEP 1: Driver sends SOS
+    function customerSendSOS() {
+      if (!AppState.isMechanicOnline) {
+        showToast('All nearby technicians are offline. Turn Mechanic Online on right phone!');
+        return;
+      }
+
+      AppState.workflow = 'SEARCHING';
+      document.getElementById('cust-view-idle').classList.add('hidden');
+      document.getElementById('cust-view-searching').classList.remove('hidden');
+      document.getElementById('cust-search-item').textContent = AppState.serviceName;
+
+      showToast('Broadcasting SOS via WebSockets to nearest mobile workshops...');
+
+      setTimeout(() => {
+        AppState.workflow = 'ALERTED';
+        
+        // Populate Mechanic Alert Card
+        document.getElementById('mech-alert-issue').textContent = AppState.serviceName;
+        const payout = (AppState.basePrice * 0.85).toFixed(2);
+        document.getElementById('mech-alert-payout').textContent = `$${payout}`;
+        
+        document.getElementById('mech-view-idle').classList.add('hidden');
+        document.getElementById('mech-view-alert').classList.remove('hidden');
+
+        showToast('🚨 PING ON MECHANIC PHONE: Incoming Emergency Rescue!');
+        lucide.createIcons();
+
+        // 30s Countdown
+        let count = 30;
+        clearInterval(AppState.timerInterval);
+        AppState.timerInterval = setInterval(() => {
+          count--;
+          const el = document.getElementById('mech-countdown');
+          if (el) el.textContent = `${count}s`;
+          if (count <= 0) {
+            clearInterval(AppState.timerInterval);
+            if (AppState.workflow === 'ALERTED') mechanicDeclineJob();
+          }
+        }, 1000);
+      }, 1000);
+    }
+
+    function cancelCustomerRequest() {
+      AppState.workflow = 'IDLE';
+      clearInterval(AppState.timerInterval);
+      document.getElementById('cust-view-searching').classList.add('hidden');
+      document.getElementById('cust-view-idle').classList.remove('hidden');
+      document.getElementById('mech-view-alert').classList.add('hidden');
+      document.getElementById('mech-view-idle').classList.remove('hidden');
+      showToast('SOS cancelled');
+    }
+
+    // STEP 2: Mechanic Accepts
+    function mechanicAcceptJob() {
+      clearInterval(AppState.timerInterval);
+      AppState.workflow = 'EN_ROUTE';
+
+      // Update Mechanic UI
+      document.getElementById('mech-view-alert').classList.add('hidden');
+      document.getElementById('mech-view-active').classList.remove('hidden');
+      document.getElementById('mech-nav-banner').classList.remove('hidden');
+
+      // Update Customer UI & Add Moving Marker
+      document.getElementById('cust-view-searching').classList.add('hidden');
+      document.getElementById('cust-view-tracking').classList.remove('hidden');
+      custMechanicMarker.addTo(custMap);
+      custRoutePolyline.addTo(custMap);
+
+      showToast('Van #72 assigned! Route linked and live on both phones.');
+      lucide.createIcons();
+    }
+
+    function mechanicDeclineJob() {
+      clearInterval(AppState.timerInterval);
+      document.getElementById('mech-view-alert').classList.add('hidden');
+      document.getElementById('mech-view-idle').classList.remove('hidden');
+      showToast('Job declined by partner.');
+    }
+
+    // STEP 3: Simulate Driving to Stranded Car
+    function simulateDriveMovement() {
+      showToast('Simulating live GPS navigation drive along Galle Rd...');
+      
+      const midPoint = [6.8990, 79.8580];
+      const targetPoint = [6.8930, 79.8552];
+
+      // Move markers halfway then to customer
+      setTimeout(() => {
+        custMechanicMarker.setLatLng(midPoint);
+        mechMechanicMarker.setLatLng(midPoint);
+        custMap.panTo(midPoint);
+        mechMap.panTo(midPoint);
+        document.getElementById('cust-status-eta').textContent = 'ETA: 2 minutes (800m)';
+        document.getElementById('mech-nav-eta').textContent = 'ETA 2m';
+      }, 1000);
+
+      setTimeout(() => {
+        custMechanicMarker.setLatLng(targetPoint);
+        mechMechanicMarker.setLatLng(targetPoint);
+        custMap.panTo(targetPoint);
+        mechMap.panTo(targetPoint);
+
+        document.getElementById('cust-status-eta').textContent = 'Van Arriving On-Site!';
+        document.getElementById('mech-nav-eta').textContent = 'Arrived!';
+        document.getElementById('mech-nav-step').textContent = 'Destination reached on Left';
+        document.getElementById('cust-van-speed').textContent = '0 km/h';
+
+        // Enable Arrived button
+        const btn = document.getElementById('btn-mark-arrived');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+        showToast('Technician van has arrived at breakdown spot!');
+      }, 2200);
+    }
+
+    // STEP 4: Mechanic Marks Arrived
+    function mechanicMarkArrived() {
+      AppState.workflow = 'ARRIVED';
+      document.getElementById('mech-job-status-badge').textContent = 'On-Site • Diagnosing';
+      document.getElementById('mech-job-status-badge').className = 'text-amber-400 font-bold bg-amber-500/20 px-2 py-0.5 rounded-full text-[10px]';
+
+      document.getElementById('btn-mark-arrived').disabled = true;
+      document.getElementById('btn-mark-arrived').classList.add('opacity-50');
+      document.getElementById('btn-simulate-drive').classList.add('hidden');
+
+      // Enable Complete Job button
+      const btnComplete = document.getElementById('btn-complete-job');
+      btnComplete.disabled = false;
+      btnComplete.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      // Update Customer UI Timeline
+      document.getElementById('cust-status-badge').textContent = 'Technician On-Site';
+      document.getElementById('cust-timeline-arrival').className = 'flex items-center gap-2 text-emerald-400';
+      document.getElementById('cust-timeline-arrival').innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>Arrival & OBD/Visual Inspection</span>`;
+
+      lucide.createIcons();
+      showToast('Technician conducting on-site assessment...');
+    }
+
+    // STEP 5: Mechanic Pushes Extra Spare Part Quote to Customer Phone
+    function mechanicPushQuote() {
+      const select = document.getElementById('mech-part-picker');
+      const [name, price] = select.value.split('|');
+      
+      AppState.pendingPart = {
+        name: name,
+        cost: parseFloat(price)
+      };
+
+      document.getElementById('mech-quote-status').innerHTML = `<span class="text-amber-400 font-bold">Quote Sent:</span> ${name} ($${price})`;
+
+      // Trigger Instant Alert on Customer Phone
+      document.getElementById('cust-quote-desc').textContent = `Technician on-site inspection diagnosed: ${name} ($${price}).`;
+      document.getElementById('cust-extra-quote-banner').classList.remove('hidden');
+
+      showToast(`Quotation for "${name}" pushed to Customer Phone!`);
+    }
+
+    // STEP 6: Customer Approves or Declines Spare Part
+    function customerApproveExtra(isApproved) {
+      document.getElementById('cust-extra-quote-banner').classList.add('hidden');
+
+      if (isApproved && AppState.pendingPart) {
+        AppState.approvedPartName = AppState.pendingPart.name;
+        AppState.approvedPartCost = AppState.pendingPart.cost;
+        document.getElementById('mech-quote-status').innerHTML = `<span class="text-emerald-400 font-bold">Driver Approved:</span> ${AppState.approvedPartName} (+$${AppState.approvedPartCost.toFixed(2)})`;
+        showToast('Part quote approved! Cost added to final ledger.');
+      } else {
+        document.getElementById('mech-quote-status').innerHTML = `<span class="text-rose-400 font-bold">Driver Declined extra part quote.</span>`;
+        showToast('Part quote declined.');
+      }
+    }
+
+    // STEP 7: Mechanic Completes Job & Releases Escrow
+    function mechanicCompleteJob() {
+      AppState.workflow = 'COMPLETED';
+
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+
+      const laborCut = AppState.basePrice * 0.85;
+      const totalMechanicEarn = laborCut + AppState.approvedPartCost;
+
+      let totalCustomerPaid = AppState.basePrice + AppState.approvedPartCost + 2.00;
+      if (AppState.hasLifeCoverRider) totalCustomerPaid += AppState.riderCost;
+
+      // Populate Bill on Customer Phone
+      document.getElementById('bill-srv-name').textContent = AppState.serviceName;
+      document.getElementById('bill-base-cost').textContent = `$${AppState.basePrice.toFixed(2)}`;
+      
+      if (AppState.approvedPartCost > 0) {
+        document.getElementById('bill-extra-row').classList.remove('hidden');
+        document.getElementById('bill-extra-name').textContent = AppState.approvedPartName;
+        document.getElementById('bill-extra-cost').textContent = `$${AppState.approvedPartCost.toFixed(2)}`;
+      }
+
+      if (AppState.hasLifeCoverRider) {
+        document.getElementById('bill-rider-row').classList.remove('hidden');
+      }
+
+      document.getElementById('bill-total-cost').textContent = `$${totalCustomerPaid.toFixed(2)}`;
+
+      // Populate Mechanic Wallet Summary
+      document.getElementById('mech-sum-labor').textContent = `$${laborCut.toFixed(2)}`;
+      if (AppState.approvedPartCost > 0) {
+        document.getElementById('mech-sum-parts-row').classList.remove('hidden');
+        document.getElementById('mech-sum-parts').textContent = `$${AppState.approvedPartCost.toFixed(2)}`;
+      }
+      document.getElementById('mech-sum-total').textContent = `$${totalMechanicEarn.toFixed(2)}`;
+
+      // Switch views on both phones
+      document.getElementById('cust-view-tracking').classList.add('hidden');
+      document.getElementById('cust-view-completed').classList.remove('hidden');
+
+      document.getElementById('mech-view-active').classList.add('hidden');
+      document.getElementById('mech-view-summary').classList.remove('hidden');
+      document.getElementById('mech-nav-banner').classList.add('hidden');
+
+      lucide.createIcons();
+      showToast('Roadside rescue completed! Cashless escrow released.');
+    }
+
+    // Auto-Play Complete Demo Scenario
+    function startAutoWalkthrough() {
+      resetPrototype();
+      showToast('Starting automated walkthrough in 1s...');
+      setTimeout(() => customerSendSOS(), 1000);
+      setTimeout(() => mechanicAcceptJob(), 3500);
+      setTimeout(() => simulateDriveMovement(), 5500);
+      setTimeout(() => mechanicMarkArrived(), 8500);
+      setTimeout(() => mechanicPushQuote(), 10500);
+      setTimeout(() => customerApproveExtra(true), 12500);
+      setTimeout(() => mechanicCompleteJob(), 14500);
+    }
+
+    // Reset All State
+    function resetPrototype() {
+      AppState.workflow = 'IDLE';
+      AppState.approvedPartName = null;
+      AppState.approvedPartCost = 0.00;
+      clearInterval(AppState.timerInterval);
+
+      // Customer Views
+      document.getElementById('cust-view-idle').classList.remove('hidden');
+      document.getElementById('cust-view-searching').classList.add('hidden');
+      document.getElementById('cust-view-tracking').classList.add('hidden');
+      document.getElementById('cust-view-completed').classList.add('hidden');
+      document.getElementById('cust-extra-quote-banner').classList.add('hidden');
+      document.getElementById('bill-extra-row').classList.add('hidden');
+      document.getElementById('bill-rider-row').classList.add('hidden');
+
+      // Mechanic Views
+      document.getElementById('mech-view-idle').classList.remove('hidden');
+      document.getElementById('mech-view-alert').classList.add('hidden');
+      document.getElementById('mech-view-active').classList.add('hidden');
+      document.getElementById('mech-view-summary').classList.add('hidden');
+      document.getElementById('mech-nav-banner').classList.add('hidden');
+      document.getElementById('mech-sum-parts-row').classList.add('hidden');
+      document.getElementById('mech-quote-status').textContent = 'No extra parts quoted yet.';
+      document.getElementById('btn-simulate-drive').classList.remove('hidden');
+
+      const btnArrived = document.getElementById('btn-mark-arrived');
+      btnArrived.disabled = true;
+      btnArrived.className = 'flex-1 bg-slate-700 hover:bg-emerald-600 text-white text-xs font-semibold py-1.5 rounded-lg transition flex items-center justify-center gap-1 opacity-50 cursor-not-allowed';
+
+      const btnComplete = document.getElementById('btn-complete-job');
+      btnComplete.disabled = true;
+      btnComplete.className = 'w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-98 transition text-xs opacity-50 cursor-not-allowed';
+
+      // Reset Maps
+      if (custMechanicMarker) custMap.removeLayer(custMechanicMarker);
+      if (custRoutePolyline) custMap.removeLayer(custRoutePolyline);
+      custMechanicMarker.setLatLng(AppState.mechanicInitialCoords);
+      mechMechanicMarker.setLatLng(AppState.mechanicInitialCoords);
+      custMap.setView(AppState.customerCoords, 14);
+      mechMap.setView(AppState.mechanicInitialCoords, 14);
+
+      lucide.createIcons();
+      showToast('Prototype reset to clean standby state');
+    }
+
+    // Diagnostic Modals
+    function toggleDiagnosticsModal(show) {
+      document.getElementById('diag-modal').classList.toggle('hidden', !show);
+      lucide.createIcons();
+    }
+    function toggleDeployModal(show) {
+      document.getElementById('deploy-modal').classList.toggle('hidden', !show);
+      lucide.createIcons();
+    }
+
+    function simulateAudioAcousticScan() {
+      const status = document.getElementById('acoustic-status');
+      status.textContent = 'Listening to engine harmonics (4s)...';
+      setTimeout(() => {
+        status.innerHTML = '<span class="text-rose-400 font-bold">Matched:</span> Alternator Bearing Wear (88% match)';
+        showToast('Acoustic match found: Alternator Bearing Grinding');
+      }, 2000);
+    }
+
+    function pushOBDtoMechanic() {
+      toggleDiagnosticsModal(false);
+      showToast('DTC fault code P0300 beamed to Tech Alex via Bluetooth/Cellular telemetry');
+    }
+
+    function simulateCustomerCall() {
+      showToast('Initiating encrypted VoIP call (Phone numbers masked)');
+    }
+
+    // ================= FULL PROJECT ZIP EXPORT BUILDER ================= //
+    async function generateProjectZip() {
+      showToast('📦 Packaging complete full-stack project ZIP...');
+
+      const zip = new JSZip();
+
+      // 1. Current App HTML
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      zip.file("index.html", htmlContent);
+
+      // 2. Production Node.js + WebSocket + Redis Geo Backend Server
+      const serverJs = `/**
+ * RescueWrench Real-Time Geospatial Dispatch Server
+ * Stack: Node.js, Express, WebSocket (ws), Redis (ioredis), PostGIS
+ */
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const Redis = require('ioredis');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+app.use(express.json());
+
+// 1. Update Mechanic Geospatial Location
+app.post('/api/v1/mechanic/location', async (req, res) => {
+  const { mechanicId, lat, lng } = req.body;
+  // Store in Redis Geospatial Index
+  await redis.geoadd('active_mechanics', lng, lat, mechanicId);
+  res.json({ success: true, timestamp: Date.now() });
+});
+
+// 2. Dispatch Query: Find mechanics within 10km radius
+app.post('/api/v1/sos/dispatch', async (req, res) => {
+  const { customerLat, customerLng, serviceType } = req.body;
+  
+  // GEORADIUS active_mechanics lng lat 10 km WITHDIST WITHCOORD
+  const nearbyMechanics = await redis.georadius(
+    'active_mechanics', customerLng, customerLat, 10, 'km', 'WITHDIST', 'ASC'
+  );
+
+  res.json({
+    totalFound: nearbyMechanics.length,
+    mechanics: nearbyMechanics.map(([id, dist]) => ({ mechanicId: id, distanceKm: dist }))
+  });
+});
+
+// WebSocket Real-time Telemetry Channel
+wss.on('connection', (ws) => {
+  ws.on('message', (message) => {
+    const payload = JSON.parse(message);
+    // Broadcast updates between driver and mechanic
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(payload));
+      }
+    });
+  });
+});
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => console.log(\`RescueWrench Server running on port \${PORT}\`));
+`;
+      zip.file("server.js", serverJs);
+
+      // 3. PostgreSQL + PostGIS Schema
+      const schemaSql = `-- RescueWrench PostgreSQL + PostGIS Production Schema
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Users / Drivers Table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name VARCHAR(120) NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    emergency_contact VARCHAR(20),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vehicles (Digital Glovebox)
+CREATE TABLE vehicles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    license_plate VARCHAR(20) NOT NULL,
+    make_model VARCHAR(100) NOT NULL,
+    drive_type VARCHAR(10) DEFAULT '2WD', -- '2WD', 'AWD', '4WD'
+    tire_spec VARCHAR(30),
+    battery_type VARCHAR(30)
+);
+
+-- Mechanics / Recovery Vans
+CREATE TABLE mechanics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name VARCHAR(120) NOT NULL,
+    van_identifier VARCHAR(50),
+    is_online BOOLEAN DEFAULT false,
+    rating NUMERIC(3,2) DEFAULT 5.00,
+    current_location GEOMETRY(Point, 4326)
+);
+
+CREATE INDEX idx_mechanic_location ON mechanics USING GIST(current_location);
+
+-- Emergency Service Requests (Jobs)
+CREATE TABLE service_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    mechanic_id UUID REFERENCES mechanics(id),
+    service_category VARCHAR(50) NOT NULL,
+    status VARCHAR(30) DEFAULT 'REQUESTED', -- 'REQUESTED', 'EN_ROUTE', 'ARRIVED', 'COMPLETED'
+    pickup_location GEOMETRY(Point, 4326),
+    base_price NUMERIC(10,2) NOT NULL,
+    extra_parts_cost NUMERIC(10,2) DEFAULT 0.00,
+    has_life_cover_rider BOOLEAN DEFAULT false,
+    total_amount NUMERIC(10,2) NOT NULL,
+    customer_signature TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+`;
+      zip.file("schema.sql", schemaSql);
+
+      // 4. Docker Compose
+      const dockerCompose = `version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgres://postgres:password@db:5432/rescuewrench
+    depends_on:
+      - redis
+      - db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      - POSTGRES_DB=rescuewrench
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+`;
+      zip.file("docker-compose.yml", dockerCompose);
+
+      // 5. PWA Manifest
+      const manifestJson = `{
+  "name": "RescueWrench Roadside Assistance",
+  "short_name": "RescueWrench",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/ea580c/ffffff?text=RW",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
+`;
+      zip.file("manifest.json", manifestJson);
+
+      // 6. Comprehensive README.md
+      const readmeMd = `# RescueWrench — On-Demand Roadside Assistance & Technical Concierge
+
+A production-ready platform connecting stranded motorists with mobile mechanic workshops, tire vans, and flatbeds.
+
+## Included in this Package
+- \`index.html\`: Complete dual-phone synchronized interactive application with Leaflet GPS maps.
+- \`server.js\`: Express & WebSocket server with Redis GEORADIUS dispatch.
+- \`schema.sql\`: PostgreSQL database schema with PostGIS spatial indexing.
+- \`docker-compose.yml\`: Microservices orchestration configuration.
+- \`manifest.json\`: Progressive Web App (PWA) configuration.
+
+## Quick Start
+1. Open \`index.html\` in any modern browser for direct testing.
+2. Run backend cluster:
+   \`\`\`bash
+   docker compose up -d
+   \`\`\`
+`;
+      zip.file("README.md", readmeMd);
+
+      // Trigger Browser Download
+      zip.generateAsync({ type: "blob" }).then(function(content) {
+        saveAs(content, "RescueWrench-Full-Project.zip");
+        showToast("✅ Full Project ZIP downloaded successfully!");
+      });
+    }
+  </script>
+
+
+</body></html>
