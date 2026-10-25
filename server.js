@@ -1,54 +1,66 @@
-/**
- * RescueWrench Real-Time Geospatial Dispatch Server
- * Stack: Node.js, Express, WebSocket (ws), Redis (ioredis), PostGIS
- */
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-const Redis = require('ioredis');
+const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
+const path = require("path");
+const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
+app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
-// 1. Update Mechanic Geospatial Location
-app.post('/api/v1/mechanic/location', async (req, res) => {
-  const { mechanicId, lat, lng } = req.body;
-  // Store in Redis Geospatial Index
-  await redis.geoadd('active_mechanics', lng, lat, mechanicId);
-  res.json({ success: true, timestamp: Date.now() });
-});
-
-// 2. Dispatch Query: Find mechanics within 10km radius
-app.post('/api/v1/sos/dispatch', async (req, res) => {
-  const { customerLat, customerLng, serviceType } = req.body;
-  
-  // GEORADIUS active_mechanics lng lat 10 km WITHDIST WITHCOORD
-  const nearbyMechanics = await redis.georadius(
-    'active_mechanics', customerLng, customerLat, 10, 'km', 'WITHDIST', 'ASC'
-  );
-
-  res.json({
-    totalFound: nearbyMechanics.length,
-    mechanics: nearbyMechanics.map(([id, dist]) => ({ mechanicId: id, distanceKm: dist }))
-  });
-});
-
-// WebSocket Real-time Telemetry Channel
-wss.on('connection', (ws) => {
-  ws.on('message', (message) => {
-    const payload = JSON.parse(message);
-    // Broadcast updates between driver and mechanic
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(payload));
-      }
+// --- OPTIONAL REDIS SETUP ---
+let redisClient = null;
+if (process.env.REDIS_URL) {
+  try {
+    const Redis = require("ioredis");
+    redisClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      retryStrategy: () => null // Don't spam retries if it fails
     });
+    redisClient.on("error", (err) => {
+      console.warn("Redis unavailable, using local memory instead.");
+    });
+  } catch (e) {
+    console.warn("Redis initialization skipped.");
+  }
+}
+
+// In-memory fallback
+let clients = new Set();
+
+wss.on("connection", (ws) => {
+  clients.add(ws);
+  ws.on("message", (message) => {
+    try {
+      const data = JSON.parse(message);
+      clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(data));
+        }
+      });
+    } catch (err) {
+      console.error("WebSocket broadcast error:", err);
+    }
+  });
+
+  ws.on("close", () => {
+    clients.delete(ws);
   });
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`RescueWrench Server running on port ${PORT}`));
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    connectedClients: clients.size,
+    redis: !!redisClient
+  });
+});
+
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => {
+  console.log(`SafeWheel Server running on port ${PORT}`);
+});
